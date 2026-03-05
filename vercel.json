@@ -8,16 +8,18 @@
   ],
   "routes": [
     {
-      "src": "^/$",
-      "dest": "/public/dashboard.html"
+      "handle": "filesystem"
     },
     {
       "src": "/api/(.*)",
       "dest": "/api/index.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "src": "^/$",
+      "status": 302,
+      "headers": {
+        "Location": "/dashboard.html"
+      }
     }
   ],
   "headers": [
