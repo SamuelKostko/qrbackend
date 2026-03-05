@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Generar QR de Cobro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            color: #333;
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card.pending .value { color: #f59e0b; }
+        .stat-card.completed .value { color: #10b981; }
+        .stat-card.expired .value { color: #ef4444; }
+        .stat-card.total .value { color: #667eea; }
+
+        .actions {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .actions h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .qr-result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .qr-result.show { display: block; }
+
+        .qr-result img {
+            max-width: 300px;
+            margin: 20px auto;
+            display: block;
+            border: 4px solid white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .qr-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .qr-info p {
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .qr-info strong { color: #333; }
+
+        .transactions {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .transactions h2 { color: #333; margin-bottom: 20px; }
+
+        .transaction-filters {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover { border-color: #667eea; }
+        .filter-btn.active { background: #667eea; color: white; border-color: #667eea; }
+
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .transaction-table thead { background: #f9fafb; }
+
+        .transaction-table th,
+        .transaction-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .transaction-table th {
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .transaction-table td { color: #333; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.completed { background: #d1fae5; color: #065f46; }
+        .status-badge.expired { background: #fee2e2; color: #991b1b; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .refresh-btn {
+            float: right;
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .refresh-btn:hover { background: #059669; }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .transaction-table { font-size: 14px; }
+            .transaction-table th, .transaction-table td { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎫 Dashboard - Sistema de Cobros QR</h1>
+            <p>Genera códigos QR para cobrar a tus clientes SAMUEL Rewards</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <h3>Total Transacciones</h3>
+                <div class="value" id="totalTransactions">0</div>
+            </div>
+            <div class="stat-card completed">
+                <h3>Completadas</h3>
+                <div class="value" id="completedTransactions">0</div>
+            </div>
+            <div class="stat-card pending">
+                <h3>Pendientes</h3>
+                <div class="value" id="pendingTransactions">0</div>
+            </div>
+            <div class="stat-card expired">
+                <h3>Expiradas</h3>
+                <div class="value" id="expiredTransactions">0</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <h2>Generar Nuevo QR de Cobro</h2>
+            <form id="qrForm">
+                <div class="form-group">
+                    <label for="amount">Monto a Cobrar (RD$) *</label>
+                    <input type="number" id="amount" step="0.01" min="0.01" required placeholder="100.00">
+                </div>
+                <div class="form-group">
+                    <label for="description">Descripción (opcional)</label>
+                    <input type="text" id="description" placeholder="Ej: Compra en tienda, Servicio X, etc.">
+                </div>
+                <div class="form-group">
+                    <label for="expirationMinutes">Tiempo de Expiración (minutos)</label>
+                    <input type="number" id="expirationMinutes" value="30" min="1" placeholder="30">
+                </div>
+                <button type="submit" class="btn" id="submitBtn">🎫 Generar Código QR</button>
+            </form>
+
+            <div class="qr-result" id="qrResult">
+                <h3 style="color: #10b981; margin-bottom: 15px;">✅ QR Generado Exitosamente</h3>
+                <img id="qrImage" src="" alt="Código QR">
+                <div class="qr-info">
+                    <p><strong>ID de Transacción:</strong> <span id="transactionId"></span></p>
+                    <p><strong>Monto:</strong> RD$ <span id="qrAmount"></span></p>
+                    <p><strong>Descripción:</strong> <span id="qrDescription">-</span></p>
+                    <p><strong>Expira:</strong> <span id="expiresAt"></span></p>
+                    <p style="font-size: 12px; color: #999; margin-top: 15px;">
+                        💡 El cliente debe escanear este código desde la app SAMUEL Rewards
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="transactions">
+            <h2>
+                Transacciones Recientes
+                <button class="refresh-btn" onclick="loadTransactions()">🔄 Actualizar</button>
+            </h2>
+            
+            <div class="transaction-filters">
+                <button class="filter-btn active" data-status="all">Todas</button>
+                <button class="filter-btn" data-status="pending">Pendientes</button>
+                <button class="filter-btn" data-status="completed">Completadas</button>
+                <button class="filter-btn" data-status="expired">Expiradas</button>
+            </div>
+
+            <div id="transactionsContainer">
+                <div class="loading">Cargando transacciones...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard/stats`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const stats = result.data;
+                    document.getElementById('totalTransactions').textContent = stats.total;
+                    document.getElementById('completedTransactions').textContent = stats.completed;
+                    document.getElementById('pendingTransactions').textContent = stats.pending;
+                    document.getElementById('expiredTransactions').textContent = stats.expired;
+                }
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+            }
+        }
+
+        let currentFilter = 'all';
+        
+        async function loadTransactions(status = currentFilter) {
+            try {
+                currentFilter = status;
+                const url = status === 'all' 
+                    ? `${API_BASE}/dashboard/transactions`
+                    : `${API_BASE}/dashboard/transactions?status=${status}`;
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                const container = document.getElementById('transactionsContainer');
+
+                if (result.success && result.data.length > 0) {
+                    const tableHTML = `
+                        <table class="transaction-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Monto</th>
+                                    <th>Descripción</th>
+                                    <th>Estado</th>
+                                    <th>Creado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.data.map(t => `
+                                    <tr>
+                                        <td>${t.transactionId.substring(0, 8)}...</td>
+                                        <td>RD$ ${t.amount.toFixed(2)}</td>
+                                        <td>${t.description || '-'}</td>
+                                        <td><span class="status-badge ${t.status}">${t.status}</span></td>
+                                        <td>${new Date(t.createdAt).toLocaleString('es-DO')}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                    container.innerHTML = tableHTML;
+                } else {
+                    container.innerHTML = '<div class="loading">No hay transacciones para mostrar</div>';
+                }
+            } catch (error) {
+                console.error('Error cargando transacciones:', error);
+                document.getElementById('transactionsContainer').innerHTML = 
+                    '<div class="loading">Error cargando transacciones</div>';
+            }
+        }
+
+        document.getElementById('qrForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const amount = document.getElementById('amount').value;
+            const description = document.getElementById('description').value;
+            const expirationMinutes = document.getElementById('expirationMinutes').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Generando...';
+
+            try {
+                const response = await fetch(`${API_BASE}/payments/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: parseFloat(amount),
+                        description: description || null,
+                        expirationMinutes: parseInt(expirationMinutes)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('qrImage').src = result.data.qrCodeImage;
+                    document.getElementById('transactionId').textContent = result.data.transactionId;
+                    document.getElementById('qrAmount').textContent = result.data.amount.toFixed(2);
+                    document.getElementById('qrDescription').textContent = description || '-';
+                    document.getElementById('expiresAt').textContent = new Date(result.data.expiresAt).toLocaleString('es-DO');
+                    document.getElementById('qrResult').classList.add('show');
+
+                    loadStats();
+                    loadTransactions();
+
+                    document.getElementById('qrForm').reset();
+                    document.getElementById('expirationMinutes').value = '30';
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error generando QR:', error);
+                alert('Error generando código QR. Verifica tu conexión.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🎫 Generar Código QR';
+            }
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const status = btn.getAttribute('data-status');
+                loadTransactions(status);
+            });
+        });
+
+        loadStats();
+        loadTransactions();
+
+        setInterval(() => {
+            loadStats();
+            loadTransactions();
+        }, 30000);
+    </script>
+</body>
+</html>

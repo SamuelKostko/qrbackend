@@ -1,0 +1,22 @@
+{
+  "name": "qr-payment-backend",
+  "version": "1.0.0",
+  "description": "Backend de generación de QR para sistema SAMUEL Rewards",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Build complete'",
+    "start": "node api/index.js"
+  },
+  "keywords": ["qr", "payment", "firebase", "vercel", "samuel-rewards"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "qrcode": "^1.5.3",
+    "uuid": "^9.0.0",
+    "cors": "^2.8.5",
+    "firebase-admin": "^12.0.0",
+    "dotenv": "^16.3.1"
+  }
+}
