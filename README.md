@@ -42,9 +42,7 @@ vercel
 ### 3. Variables de Entorno en Vercel
 
 ```
-FIREBASE_PROJECT_ID=tu-proyecto-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@tu-proyecto.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
+FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"tu-proyecto-id","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n","client_email":"firebase-adminsdk-xxxxx@tu-proyecto.iam.gserviceaccount.com"}
 QR_EXPIRATION_MINUTES=30
 SAMUEL_APP_URL=https://lealtad-three.vercel.app
 NODE_ENV=production

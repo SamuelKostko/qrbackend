@@ -30,9 +30,7 @@ git push -u origin main
 5. Agrega estas **Environment Variables**:
 
 ```
-FIREBASE_PROJECT_ID = (del JSON descargado)
-FIREBASE_CLIENT_EMAIL = (del JSON descargado)
-FIREBASE_PRIVATE_KEY = (del JSON descargado - copia TODO incluyendo BEGIN/END)
+FIREBASE_SERVICE_ACCOUNT_JSON = (pega el JSON completo del service account en una sola línea)
 QR_EXPIRATION_MINUTES = 30
 SAMUEL_APP_URL = https://lealtad-three.vercel.app
 NODE_ENV = production
