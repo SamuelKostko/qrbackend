@@ -43,7 +43,7 @@ NODE_ENV = production
 1. Ve a `https://tu-proyecto.vercel.app/api/health`
    - Deberías ver: `{"status":"OK",...}`
 
-2. Ve a `https://tu-proyecto.vercel.app/dashboard.html`
+2. Ve a `https://tu-proyecto.vercel.app/index.html`
    - Genera un QR de prueba
    - Verifica que aparezca la imagen
 
@@ -68,7 +68,7 @@ Básicamente:
 ## 🔧 URLs Finales
 
 - API: `https://tu-proyecto.vercel.app/api`
-- Dashboard: `https://tu-proyecto.vercel.app/dashboard.html`
+- Dashboard: `https://tu-proyecto.vercel.app/index.html`
 - Health: `https://tu-proyecto.vercel.app/api/health`
 
 ## 🐛 Troubleshooting
